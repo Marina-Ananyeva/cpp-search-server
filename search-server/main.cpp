@@ -1,4 +1,3 @@
-
 #include <algorithm>
 #include <cmath>
 #include <map>
@@ -81,9 +80,9 @@ public:
     }
 
     template <typename DocumentPredicate>
-    vector<Document> FindTopDocuments(const string& raw_query, DocumentPredicate pred) const {
+    vector<Document> FindTopDocuments(const string& raw_query, DocumentPredicate predicate) const {
         const Query query = ParseQuery(raw_query);
-        auto matched_documents = FindAllDocuments(query, pred);
+        auto matched_documents = FindAllDocuments(query, predicate);
 
         sort(matched_documents.begin(), matched_documents.end(),
              [](const Document& lhs, const Document& rhs) {
@@ -211,7 +210,7 @@ private:
     }
     
     template <typename DocumentPredicate>
-    vector<Document> FindAllDocuments(const Query& query, DocumentPredicate pred) const {
+    vector<Document> FindAllDocuments(const Query& query, DocumentPredicate predicate) const {
         map<int, double> document_to_relevance;
         for (const string& word : query.plus_words) {
             if (word_to_document_freqs_.count(word) == 0) {
@@ -233,7 +232,7 @@ private:
         
         vector<Document> matched_documents;
         for (const auto [document_id, relevance] : document_to_relevance) {
-            if (pred (document_id, documents_.at(document_id).status, documents_.at(document_id).rating) == true) {    
+            if (predicate (document_id, documents_.at(document_id).status, documents_.at(document_id).rating) == true) {    
             matched_documents.push_back(
                 {document_id, relevance, documents_.at(document_id).rating});
             }
@@ -316,9 +315,16 @@ void TestExcludeMinusWordsFromFindDocuments() {
     const int doc_id = 42;
     const string content = "cat in the city"s;
     const vector<int> ratings = {1, 2, 3};
-    string query_minus_Word = "-cat"s;
     {
         SearchServer server;
+        server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
+        ASSERT_EQUAL(server.FindTopDocuments("in"s).size(), 1u);
+        ASSERT_EQUAL(server.FindTopDocuments("in"s)[0].id, doc_id);
+    }
+    
+    {
+        SearchServer server;
+        string query_minus_Word = "-cat"s;        
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         ASSERT_HINT(server.FindTopDocuments("-cat"s).empty(), 
                     "Documents with minus words must be excluded from the search"s);
@@ -348,7 +354,7 @@ void TextMatchingWords() {
 }
 
 //Тест проверяет, что документы правильно сортируются по возрастанию релевантности
-    void TestSortRelevanceOfDocument() {
+    void TestSortDocumentsByRelevance() {
         const int doc_id_1 = 42;
         const string content_1 = "cat in the city"s;
         const vector<int> ratings_1 = {1, 2, 3};
@@ -356,10 +362,15 @@ void TextMatchingWords() {
         const int doc_id_2 = 41;
         const string content_2 = "cat in the city and country"s;
         const vector<int> ratings_2 = {1, 2, 3};
+
+        const int doc_id_3 = 40;
+        const string content_3 = "dog in the town"s;
+        const vector<int> ratings_3 = {1, 2, 3};
         {
             SearchServer server;
             server.AddDocument(doc_id_1, content_1, DocumentStatus::ACTUAL, ratings_1);
             server.AddDocument(doc_id_2, content_2, DocumentStatus::ACTUAL, ratings_2);
+            server.AddDocument(doc_id_3, content_3, DocumentStatus::ACTUAL, ratings_3);
             ASSERT_EQUAL_HINT(server.FindTopDocuments("cat city country"s)[0].id, doc_id_2, 
                                 "Documents sort by relevance incorrectly");
         }
@@ -373,11 +384,11 @@ void TextMatchingWords() {
         {
             SearchServer server;
             server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
-            ASSERT_EQUAL(server.FindTopDocuments("cat"s)[0].rating, 2U);
+            ASSERT_EQUAL(server.FindTopDocuments("cat"s)[0].rating, ((ratings[0] + ratings[1] + ratings[2]) / 3));
         }
     }
 
-//Тест проверяет, что условия предиката учитываются при фильтрации документов
+//Тест проверяет, что документы ищутся по предикату
     void TestUsingPredicate() {
         const int doc_id = 42;
         const string content = "cat in the city"s;
@@ -385,11 +396,11 @@ void TextMatchingWords() {
         {
             SearchServer server;
             server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
-            ASSERT(server.FindTopDocuments("cat"s, DocumentStatus::BANNED).empty());
+            ASSERT(server.FindTopDocuments("cat"s, [](int document_id, DocumentStatus status, int rating) { return status == DocumentStatus::BANNED; }).empty());
         }
     }
 
-//Тест проверяет, что при фильтрации документов учитывается статус документа
+//Тест проверяет, что документы ищутся по статусу
     void TestStatusFindDocuments() {
         const int doc_id_1 = 42;
         const string content_1 = "cat in the city"s;
@@ -409,13 +420,38 @@ void TextMatchingWords() {
 
 //Тест проверяет корректность расчета релевантности документов
     void TestCalculationRelevanceDocument() {
-        const int doc_id = 42;
-        const string content = "cat in the city"s;
-        const vector<int> ratings = {1, 2, 3};
+        const int doc_id_1 = 42;
+        const string content_1 = "cat in the city"s;
+        const vector<int> ratings_1 = {1, 2, 3};
+
+        const int doc_id_2 = 41;
+        const string content_2 = "dog in the city"s;
+        const vector<int> ratings_2 = {1, 2, 3};
         {
             SearchServer server;
-            server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
-            ASSERT_EQUAL(server.FindTopDocuments("cat"s)[0].relevance, 0.0);
+            server.AddDocument(doc_id_1, content_1, DocumentStatus::ACTUAL, ratings_1);
+            server.AddDocument(doc_id_2, content_2, DocumentStatus::ACTUAL, ratings_2);
+            const string term = "cat";
+            vector<double> tf_idfs;
+            double tf = 0.0;
+            double idf = 0.0;
+            int document_freq = 0;
+            const vector<vector<string>> documents = {
+                {"cat"s, "in"s, "the"s, "city"s},
+                {"dog"s, "in"s, "the"s, "city"s}
+            }; 
+            for (const auto& document : documents) {
+                if ((static_cast<int>(count(document.begin(), document.end(), term))) > 0) {
+            document_freq += 1;
+                } 
+            }
+            for (const auto& document : documents) {
+                idf = log ((documents.size() * 1.0) / document_freq);
+                tf = static_cast<int>(count(document.begin(), document.end(), term)) * 1.0 / static_cast<int>(document.size());
+                tf_idfs.push_back(tf * idf);
+            } 
+       
+        ASSERT((abs(server.FindTopDocuments("cat"s)[0].relevance - tf_idfs[0]) < EPSILON())); 
         }
     }
 
@@ -424,7 +460,7 @@ void TestSearchServer() {
     RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
     RUN_TEST(TestExcludeMinusWordsFromFindDocuments);
     RUN_TEST(TextMatchingWords);
-    RUN_TEST(TestSortRelevanceOfDocument);
+    RUN_TEST(TestSortDocumentsByRelevance);
     RUN_TEST(TestCalculationRatingDocument);
     RUN_TEST(TestUsingPredicate);
     RUN_TEST(TestStatusFindDocuments);
