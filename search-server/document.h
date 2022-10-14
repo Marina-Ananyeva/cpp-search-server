@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -15,20 +16,15 @@ struct Document {
     int rating = 0;
 };
 
-template <typename StringContainer>
-std::set<std::string> MakeUniqueNonEmptyStrings(const StringContainer& strings) {
-    std::set<std::string> non_empty_strings;
-    for (const std::string& str : strings) {
-        if (!str.empty()) {
-            non_empty_strings.insert(str);
-        }
-    }
-    return non_empty_strings;
-}
-
 enum class DocumentStatus {
     ACTUAL,
     IRRELEVANT,
     BANNED,
     REMOVED,
 };
+
+std::ostream &operator<<(std::ostream &os, const Document &document);
+
+void PrintDocument(const Document &document);
+
+void PrintMatchDocumentResult(int document_id, const std::vector<std::string> &words, DocumentStatus status);

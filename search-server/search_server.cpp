@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 void SearchServer::AddDocument(int document_id, const string& document, DocumentStatus status,
                  const vector<int>& ratings) {
     if ((document_id < 0) || (documents_.count(document_id) > 0)) {
@@ -26,8 +25,6 @@ void SearchServer::AddDocument(int document_id, const string& document, Document
     documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
     document_ids_.push_back(document_id);
 }
-
-
 
 vector<Document> SearchServer::FindTopDocuments(const string& raw_query, DocumentStatus status) const {
     return FindTopDocuments(

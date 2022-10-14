@@ -21,7 +21,6 @@
 
 using namespace std;
 
-
 int main() {
     SearchServer search_server("and in at"s);
     RequestQueue request_queue(search_server);
@@ -47,3 +46,4 @@ int main() {
 Пример вывода
 Total empty requests: 1437 
 */
+

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -63,6 +64,14 @@ public:
 private:
     std::vector<IteratorRange<Iterator>> pages_;
 };
+
+template <typename Iterator>
+std::ostream& operator<<(std::ostream& os, const IteratorRange<Iterator>& page) {
+    for (Iterator it = page.begin(); it < page.end(); advance(it, 1)) {
+        os << *it;
+    }
+    return os;
+}
 
 template <typename Container>
 auto Paginate(const Container& c, size_t page_size) {

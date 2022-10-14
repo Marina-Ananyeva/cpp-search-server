@@ -1,5 +1,7 @@
 #include <string>
 #include <vector>
+#include <map>
+#include <set>
 
 #include "string_processing.h"
 
@@ -21,6 +23,5 @@ vector<string> SplitIntoWords(const string& text) {
     if (!word.empty()) {
         words.push_back(word);
     }
-
     return words;
 }

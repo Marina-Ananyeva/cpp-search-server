@@ -30,3 +30,16 @@ private:
     QueryResult request_;
 }; 
 
+template <typename DocumentPredicate>
+std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query, DocumentPredicate document_predicate) {
+    ++request_.request_time;
+    if (request_.request_time > min_in_day_) {
+    requests_.pop_front();
+    }
+    requests_.push_back(request_);
+    const auto request_result_ = request_queue_.FindTopDocuments(raw_query, document_predicate);
+    if (!request_result_.empty()) {
+        requests_.pop_back();
+    }
+    return request_result_;
+}
