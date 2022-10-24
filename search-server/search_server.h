@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <iterator>
 
 #include "constants.h"
 #include "document.h"
@@ -45,10 +46,18 @@ public:
 
     int GetDocumentCount() const;
 
-    int GetDocumentId(int index) const;
-
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(const std::string &raw_query,
                                                         int document_id) const;
+
+    std::set<int>::const_iterator begin();
+
+    std::set<int>::const_iterator end();
+
+    std::size_t size();
+
+    const std::map<std::string, double>& GetWordFrequencies(int document_id) const ;
+
+    void RemoveDocument(int document_id);
 
 private:
     struct DocumentData {
@@ -59,7 +68,8 @@ private:
     const std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
     std::map<int, DocumentData> documents_;
-    std::vector<int> document_ids_;
+    std::set<int> document_ids_;
+    std::map<int, std::map<std::string, double>> id_with_word_and_freqs_;
 
     bool IsStopWord(const std::string &word) const;
 

@@ -1,8 +1,3 @@
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-
 #include "string_processing.h"
 
 using namespace std;

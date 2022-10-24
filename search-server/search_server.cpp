@@ -1,12 +1,3 @@
-#include <algorithm>
-#include <cmath>
-#include <map>
-#include <set>
-#include <stdexcept>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "search_server.h"
 
 using namespace std;
@@ -21,9 +12,10 @@ void SearchServer::AddDocument(int document_id, const string& document, Document
     const double inv_word_count = 1.0 / words.size();
     for (const string& word : words) {
         word_to_document_freqs_[word][document_id] += inv_word_count;
+        id_with_word_and_freqs_[document_id][word] += inv_word_count;
     }
     documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
-    document_ids_.push_back(document_id);
+    document_ids_.insert(document_id);
 }
 
 vector<Document> SearchServer::FindTopDocuments(const string& raw_query, DocumentStatus status) const {
@@ -39,13 +31,6 @@ vector<Document> SearchServer::FindTopDocuments(const string& raw_query) const {
 
 int SearchServer::GetDocumentCount() const {
     return documents_.size();
-}
-
-int SearchServer::GetDocumentId(int index) const {
-    if (index < 0 || index >= GetDocumentCount()) {
-        throw out_of_range("Индекс переданного документа выходит за пределы допустимого диапазона"s);
-    } 
-    return document_ids_[index];
 }
 
 tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& raw_query,
@@ -73,6 +58,49 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& 
     return {matched_words, documents_.at(document_id).status};
 }
 
+set<int>::const_iterator SearchServer::begin() {
+    return document_ids_.begin();
+}
+
+set<int>::const_iterator SearchServer::end() {
+    return document_ids_.end();
+}
+
+size_t SearchServer::size() {
+    return document_ids_.size();
+}
+
+const map<string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    if (!id_with_word_and_freqs_.count(document_id)) {
+        throw invalid_argument("Document id is not valid"s);
+    }
+    return id_with_word_and_freqs_.at(document_id);
+}
+
+void SearchServer::RemoveDocument(int document_id) {
+    if (!id_with_word_and_freqs_.count(document_id)) {
+        throw invalid_argument("Document id is not valid"s);
+    }
+    int remove_id;
+    vector<string> remove_words;
+    for (auto& [word, id_document] : word_to_document_freqs_) {
+        for (auto& [id, tf] : id_document) {
+            if (id == document_id) {
+                remove_id = document_id;
+                remove_words.push_back(word);
+                break;
+            }
+        }
+    }
+    for (const auto& word : remove_words) {
+        word_to_document_freqs_[word].erase(remove_id);
+    }
+
+    id_with_word_and_freqs_.erase(document_id);
+    documents_.erase(document_id);
+    document_ids_.erase(document_id);
+}
+
 bool SearchServer::IsStopWord(const string& word) const {
     return stop_words_.count(word) > 0;
 }
@@ -87,7 +115,7 @@ vector<string> SearchServer::SplitIntoWordsNoStop(const string& text) const {
     vector<string> words;
     for (const string& word : SplitIntoWords(text)) {
         if (!IsValidWord(word)) {
-            throw invalid_argument("Ошибка в поисковом запросе"s);
+            throw invalid_argument("Words in document not valid"s);
         }
         if (!IsStopWord(word)) {
             words.push_back(word);

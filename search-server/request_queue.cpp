@@ -1,7 +1,3 @@
-#include <string>
-#include <vector>
-#include <deque>
-
 #include "request_queue.h"
 
 using namespace std;
