@@ -29,7 +29,7 @@ int main() {
     cout << "Before duplicates removed: "s << search_server.GetDocumentCount() << endl;
     RemoveDuplicates(search_server);
     cout << "After duplicates removed: "s << search_server.GetDocumentCount() << endl;
-
+    /*
     SearchServer search_server1("and in at"s);
     RequestQueue request_queue(search_server1);
     search_server1.AddDocument(1, "curly cat curly tail"s, DocumentStatus::ACTUAL, {7, 2, 7});
@@ -67,8 +67,7 @@ int main() {
             PrintDocument(document);
         }
     }
-    
-
+    */
     return 0;
 } 
 /*

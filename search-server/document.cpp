@@ -1,5 +1,8 @@
 #include "document.h"
 
+#include <map>
+#include <set>
+
 using namespace std;
 
 Document::Document(int id, double relevance, int rating)

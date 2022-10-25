@@ -35,15 +35,6 @@ void BeginEndSizeTest() {
     assert(search_server.size() == 5);
 }
 
-void GetWordFrequencies(const SearchServer& search_server, int document_id) {
-    cout << "ok"s << endl;
-    try {
-        search_server.GetWordFrequencies(document_id);
-    } catch (const invalid_argument& e) {
-        cout << "Некорректный id документа "s << document_id << ": "s << e.what() << endl;
-    }
-}
-
 void TestGetWordFrequencies() {
     SearchServer search_server("and in at"s);
     search_server.AddDocument(1, "curly cat curly tail"s, DocumentStatus::ACTUAL, {7, 2, 7});

@@ -19,8 +19,6 @@ void FindTopDocuments(const SearchServer &search_server, const std::string &raw_
 
 void BeginEndSizeTest();
 
-void GetWordFrequencies(const SearchServer &search_server, int document_id);
-
 void TestGetWordFrequencies();
 
 void RemoveDocument(SearchServer &search_server, int document_id);

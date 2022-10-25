@@ -71,27 +71,23 @@ size_t SearchServer::size() {
 }
 
 const map<string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    static map<string, double> empty_frequencies;
     if (!id_with_word_and_freqs_.count(document_id)) {
-        throw invalid_argument("Document id is not valid"s);
+        return empty_frequencies;
     }
     return id_with_word_and_freqs_.at(document_id);
 }
 
 void SearchServer::RemoveDocument(int document_id) {
-    if (!id_with_word_and_freqs_.count(document_id)) {
+    if (id_with_word_and_freqs_.count(document_id) == 0) {
         throw invalid_argument("Document id is not valid"s);
     }
     int remove_id;
     vector<string> remove_words;
-    for (auto& [word, id_document] : word_to_document_freqs_) {
-        for (auto& [id, tf] : id_document) {
-            if (id == document_id) {
-                remove_id = document_id;
-                remove_words.push_back(word);
-                break;
-            }
-        }
+    for (const auto& [word, tf] : id_with_word_and_freqs_[document_id]) {
+        remove_words.push_back(word);
     }
+
     for (const auto& word : remove_words) {
         word_to_document_freqs_[word].erase(remove_id);
     }

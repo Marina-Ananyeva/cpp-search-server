@@ -2,7 +2,6 @@
 
 #include "search_server.h"
 
-#include <iostream>
 #include <map>
 #include <set>
 #include <string>
