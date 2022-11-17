@@ -82,14 +82,9 @@ void SearchServer::RemoveDocument(int document_id) {
     if (id_with_word_and_freqs_.count(document_id) == 0) {
         throw invalid_argument("Document id is not valid"s);
     }
-    int remove_id;
-    vector<string> remove_words;
-    for (const auto& [word, tf] : id_with_word_and_freqs_[document_id]) {
-        remove_words.push_back(word);
-    }
 
-    for (const auto& word : remove_words) {
-        word_to_document_freqs_[word].erase(remove_id);
+    for (const auto& [word, tf] : id_with_word_and_freqs_[document_id]) {
+        word_to_document_freqs_[word].erase(document_id);
     }
 
     id_with_word_and_freqs_.erase(document_id);
