@@ -28,9 +28,6 @@ void TestRemoveDocument();
 void TestRemoveDuplicates();
 
 void TestSearchServer();
-//void GetDocumentId(const SearchServer &search_server, const int index);
-//void SplitIntoWordsNoStop(const SearchServer &search_server, const string &text);
 
-//void ParseQueryWord(const SearchServer &search_server, const string &text);
 
 

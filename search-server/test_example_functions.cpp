@@ -42,7 +42,7 @@ void TestGetWordFrequencies() {
     search_server.AddDocument(3, "big cat fancy collar "s, DocumentStatus::ACTUAL, {1, 2, 8});
     search_server.AddDocument(4, "big dog sparrow Eugene"s, DocumentStatus::ACTUAL, {1, 3, 2});
     search_server.AddDocument(5, "big dog sparrow Vasiliy"s, DocumentStatus::ACTUAL, {1, 1, 1});
-    map<string, double> test;
+    map<string_view, double> test;
     {
     LOG_DURATION_STREAM("Operation GetWordFrequencies time", cout);
     test = search_server.GetWordFrequencies(2);
@@ -55,7 +55,6 @@ void TestGetWordFrequencies() {
 }
 
 void RemoveDocument(SearchServer& search_server, int document_id) {
-    cout << "ok"s << endl;
     try {
         search_server.RemoveDocument(document_id);
     } catch (const invalid_argument& e) {
@@ -99,8 +98,8 @@ void TestRemoveDuplicates() {
     set<int> test2;
     auto it = search_server.begin();
     for (int i = 0; i < search_server.size(); ++i) {
-    test2.insert(*it);
-    it = next(it);
+        test2.insert(*it);
+        it = next(it);
     }
     assert(search_server.size() == 5);
     assert(test1 == test2);
@@ -114,32 +113,7 @@ void TestSearchServer() {
 
     cout << "TestSearchServer is ok"s << endl;
 }
-/*
-void GetDocumentId(const SearchServer& search_server, const int index) {
-    try {
-        search_server.GetDocumentId(index);
-    } catch (const out_of_range& e) {
-        cout << "Индекс переданного документа: "s << index << " выходит за пределы допустимого диапазона"s << e.what() << endl;
-    }
-}
-*/
 
-/*
-void SplitIntoWordsNoStop(const SearchServer& search_server, const string& text) {
-    try {
-        search_server.SplitIntoWordsNoStop(text);
-    } catch (const invalid_argument& e) {
-        cout << "Ошибка в документе"s << e.what() << endl;
-    }
-}
 
-void ParseQueryWord(const SearchServer& search_server, const string& text) {
-    try {
-        search_server.ParseQueryWord(text);
-    } catch (const invalid_argument& e) {
-        cout << "Ошибка в поисковом запросе"s << e.what() << endl;
-    }
-}
-*/
 
 
